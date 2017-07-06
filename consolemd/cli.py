@@ -84,7 +84,7 @@ CTX_SETTINGS = dict(help_option_names=['-h', '--help'])
               type=str, default=os.environ.get('CONSOLEMD_STYLE', 'native'),
               callback=verify_style_name, is_eager=True,
               help="what pygments style to use for coloring (def: native)")
-@click.argument('input', type=click.File('rb'), default=sys.stdin)
+@click.argument('input', type=click.File('r'), default=sys.stdin)
 @click.pass_context
 def cli(ctx, input, **kw):
     """
@@ -93,7 +93,8 @@ def cli(ctx, input, **kw):
 
     rename_proc('consolemd')
 
-    md = input.read().decode('utf-8')
+    # md = input.read().decode('utf-8')
+    md = input.read()
 
     import consolemd
     renderer = consolemd.Renderer(style_name=kw['style'])
