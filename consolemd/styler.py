@@ -141,7 +141,7 @@ class Styler(object):
 
     @staticmethod
     def stylize( eseq, text ):
-        return u"{}{}{}".format(eseq.color_string(), text, eseq.reset_string())
+        return "{}{}{}".format(eseq.color_string(), text, eseq.reset_string())
 
     def _default(self, name, obj, entering):
         """
