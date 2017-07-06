@@ -7,24 +7,25 @@ contains color utility functions and xterm color data
 # Default mapping of #ansixxx to RGB colors.
 ansicolors = {
     # dark
-    '#ansiblack'     : '#000000',
-    '#ansidarkred'   : '#7f0000',
-    '#ansidarkgreen' : '#007f00',
-    '#ansibrown'     : '#7f7fe0',
-    '#ansidarkblue'  : '#40407f', # lighter than normal
-    '#ansipurple'    : '#7f007f',
-    '#ansiteal'      : '#007f7f',
-    '#ansilightgray' : '#e5e5e5',
+    '#ansiblack': '#000000',
+    '#ansidarkred': '#7f0000',
+    '#ansidarkgreen': '#007f00',
+    '#ansibrown': '#7f7fe0',
+    '#ansidarkblue': '#40407f',  # lighter than normal
+    '#ansipurple': '#7f007f',
+    '#ansiteal': '#007f7f',
+    '#ansilightgray': '#e5e5e5',
     # normal
-    '#ansidarkgray'  : '#555555',
-    '#ansired'       : '#ff0000',
-    '#ansigreen'     : '#00ff00',
-    '#ansiyellow'    : '#ffff00',
-    '#ansiblue'      : '#6060ff', # lighter than normal
-    '#ansifuchsia'   : '#ff00ff',
-    '#ansiturquoise' : '#00ffff',
-    '#ansiwhite'     : '#ffffff',
+    '#ansidarkgray': '#555555',
+    '#ansired': '#ff0000',
+    '#ansigreen': '#00ff00',
+    '#ansiyellow': '#ffff00',
+    '#ansiblue': '#6060ff',  # lighter than normal
+    '#ansifuchsia': '#ff00ff',
+    '#ansiturquoise': '#00ffff',
+    '#ansiwhite': '#ffffff',
 }
+
 
 def _build_color_table():
     # colors 0..15: 16 basic colors
@@ -66,6 +67,7 @@ def _build_color_table():
 
     return xterm_colors
 
+
 def to_rgb(color):
     """
     return r,g,b integers from #colorstring
@@ -81,25 +83,25 @@ def to_rgb(color):
     g = (color >> 8) & 0xff
     b = color & 0xff
 
-    return r,g,b
+    return (r, g, b)
 
 
-def from_rgb(r,g,b):
+def from_rgb(r, g, b):
     """
     return #colorstring from r,g,b integers
     """
     # hex() produces "0x08", we want just "08"
-    rgb = [hex(i)[2:].zfill(2) for i in map(int, [r,g,b])]
+    rgb = [hex(i)[2:].zfill(2) for i in map(int, [r, g, b])]
     return "#" + "".join(rgb)
 
 
-def reshade( color, per):
+def reshade(color, per):
     """
     given a #colorstring and a percentage, darken/lighten each
     r,g,b channel
     """
     def scale(c, per):
-        return max(0, min(255, int(c*per)))
+        return max(0, min(255, int(c * per)))
 
     if not color:
         return ''
@@ -107,9 +109,9 @@ def reshade( color, per):
     if per == 1.0:
         return color
 
-    r,g,b = to_rgb(color)
-    r,g,b = map( lambda c: scale(c,per), [r,g,b] )
-    return from_rgb(r,g,b)
+    (r, g, b) = to_rgb(color)
+    (r, g, b) = map(lambda c: scale(c, per), [r, g, b])
+    return from_rgb(r, g, b)
 
 
 class ColorMap(object):
@@ -129,7 +131,8 @@ class ColorMap(object):
     @property
     def color(self):
         """
-        by returning an index, we're using a built-in xterm color in the console
+        by returning an index, we're using a built-in xterm
+        color in the console
         """
         return self._color_index(self._color)
 
@@ -143,7 +146,7 @@ class ColorMap(object):
             rd = r - values[0]
             gd = g - values[1]
             bd = b - values[2]
-            d = rd*rd + gd*gd + bd*bd
+            d = rd * rd + gd * gd + bd * bd
 
             if d < distance:
                 match = i

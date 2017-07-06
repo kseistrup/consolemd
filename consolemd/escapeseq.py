@@ -4,19 +4,17 @@ from consolemd.colormap import ColorMap, to_rgb, ansicolors
 
 _true_color = True
 
-class EscapeSequence(object):
-    def __init__(self,
-            fg=None, bg=None,
-            bold=False, underline=False, italic=False, true_color=None,
-            stream=None,
-            ):
 
-        self.fg        = fg
-        self.bg        = bg
-        self.bold      = bold
+class EscapeSequence(object):
+    def __init__(self, fg=None, bg=None, bold=False, underline=False,
+                 italic=False, true_color=None, stream=None):
+
+        self.fg = fg
+        self.bg = bg
+        self.bold = bold
         self.underline = underline
-        self.italic    = italic
-        self.stream    = None
+        self.italic = italic
+        self.stream = None
 
         if true_color is None:
             true_color = _true_color
@@ -30,15 +28,20 @@ class EscapeSequence(object):
         return self.color_string()
 
     def __repr__(self):
-        return "<ESeq: {} {} {} {} {}>".format(
-                self.fg or '_', self.bg or '_', self.bold, self.underline, self.italic
-                )
+        myrepr = "<ESeq: {} {} {} {} {}>".format(
+            self.fg or '_',
+            self.bg or '_',
+            self.bold,
+            self.underline,
+            self.italic
+        )
+        return myrepr
 
     def __enter__(self):
-        self.stream.write( self.color_string() )
+        self.stream.write(self.color_string())
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.stream.write( self.reset_string() )
+        self.stream.write(self.reset_string())
 
     @property
     def fg(self):
@@ -67,11 +70,11 @@ class EscapeSequence(object):
         attrs = []
 
         if self.fg is not None:
-            color = ColorMap( self.fg ).color
+            color = ColorMap(self.fg).color
             attrs.extend(("38", "5", "%i" % color))
 
         if self.bg is not None:
-            color = ColorMap( self.bg ).color
+            color = ColorMap(self.bg).color
             attrs.extend(("48", "5", "%i" % color))
 
         if self.bold:
@@ -88,10 +91,10 @@ class EscapeSequence(object):
     def true_color_string(self):
         attrs = []
         if self.fg:
-            r,g,b = map(str, to_rgb(self.fg))
+            (r, g, b) = map(str, to_rgb(self.fg))
             attrs.extend(("38", "2", r, g, b))
         if self.bg:
-            r,g,b = map(str, to_rgb(self.bg))
+            (r, g, b) = map(str, to_rgb(self.bg))
             attrs.extend(("48", "2", r, g, b))
         if self.bold:
             attrs.append("01")

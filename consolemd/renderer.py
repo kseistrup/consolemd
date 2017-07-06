@@ -7,7 +7,7 @@ import pygments
 import pygments.lexers
 import pygments.styles
 import pygments.formatters
-import pprint
+# import pprint
 
 from .styler import Styler, Style
 from .escapeseq import EscapeSequence, _true_color
@@ -37,32 +37,32 @@ class Renderer(object):
         if style_name is None:
             style_name = 'native'
 
-        self.parser     = parser
+        self.parser = parser
         self.style_name = style_name
         self.list_level = -1
-        self.counters   = {}
-        self.footnotes  = []
+        self.counters = {}
+        self.footnotes = []
 
     def render(self, md, **kw):
-        stream          = kw.get('output', sys.stdout)
-        self.soft_wrap  = kw.get('soft_wrap', True)
+        stream = kw.get('output', sys.stdout)
+        self.soft_wrap = kw.get('soft_wrap', True)
         self.soft_wrap_char = endl if self.soft_wrap else ' '
 
-        self.styler = Styler( stream, self.style_name)
-        ast = self.parser.parse( md )
+        self.styler = Styler(stream, self.style_name)
+        ast = self.parser.parse(md)
 
-        for obj, entering in ast.walker():
+        for (obj, entering) in ast.walker():
 
             with self.styler.cm(obj, entering):
                 prefix = self.prefix(obj, entering)
                 stream.write(prefix)
 
-                logger.debug( debug_tag(obj, entering, True) )
+                logger.debug(debug_tag(obj, entering, True))
 
                 out = self.dispatch(obj, entering)
                 stream.write(out)
 
-                logger.debug( debug_tag(obj, entering, False) )
+                logger.debug(debug_tag(obj, entering, False))
 
                 stream.flush()
 
@@ -72,9 +72,7 @@ class Renderer(object):
             out = handler(obj, entering)
             return out.encode('utf-8')
         except AttributeError:
-            logger.error( "unhandled ast type: {}".format(obj.t) )
-            #logger.debug( "entering: %s, %s", entering, pprint.pformat(obj.__dict__) )
-            #assert(0)
+            logger.error("unhandled ast type: {}".format(obj.t))
 
         return ''
 
@@ -100,24 +98,22 @@ class Renderer(object):
     def document(self, obj, entering):
         if entering:
             return ''
-        else:
-            formatted_footnotes = []
-            for i, footnote in enumerate(self.footnotes):
-                i += 1
+        formatted_footnotes = []
+        for (i, footnote) in enumerate(self.footnotes):
+            i += 1
 
-                f = "[{}] - {}".format(i, footnote)
-                formatted_footnotes.append(f)
+            f = "[{}] - {}".format(i, footnote)
+            formatted_footnotes.append(f)
 
-            if formatted_footnotes:
-                return endl + endl.join(formatted_footnotes) + endl
+        if formatted_footnotes:
+            return endl + endl.join(formatted_footnotes) + endl
 
-            return ''
+        return ''
 
     def paragraph(self, obj, entering):
         if entering:
             return ''
-        else:
-            return endl
+        return endl
 
     def text(self, obj, entering):
         return obj.literal
@@ -154,9 +150,9 @@ class Renderer(object):
             if entering:
                 # item nodes will increment this
                 start = obj.list_data['start'] - 1
-                self.counters[ tuple(obj.sourcepos[0]) ] = start
+                self.counters[tuple(obj.sourcepos[0])] = start
             else:
-                del self.counters[ tuple(obj.sourcepos[0]) ]
+                del self.counters[tuple(obj.sourcepos[0])]
 
         return ''
 
@@ -168,12 +164,12 @@ class Renderer(object):
                 num = self.counters[key]
                 bullet_char = "{}.".format(num)
             else:
-                bullet_char = obj.list_data.get('bullet_char') or '*' # -,+,*
+                bullet_char = obj.list_data.get('bullet_char') or '*'  # -,+,*
 
             text = "{}{} ".format(' '*self.list_level*2, bullet_char)
             eseq = self.styler.style.entering('bullet')
 
-            return self.styler.stylize( eseq, text )
+            return self.styler.stylize(eseq, text)
 
         return ''
 
@@ -187,24 +183,29 @@ class Renderer(object):
         # because after the first token the color codes would get reset
 
         try:
-            lang  = obj.info or 'text'
+            lang = obj.info or 'text'
             lexer = pygments.lexers.get_lexer_by_name(lang)
             style = Style.get_style_by_name(self.style_name)
-        except pygments.util.ClassNotFound: # lang is unknown to pygments
-            lang  = 'text'
+        except pygments.util.ClassNotFound:  # lang is unknown to pygments
+            lang = 'text'
             lexer = pygments.lexers.get_lexer_by_name(lang)
             style = Style.get_style_by_name(self.style_name)
 
         formatter_name = 'console16m' if _true_color else 'console'
-        formatter = pygments.formatters.get_formatter_by_name(formatter_name, style=style)
+        formatter = pygments.formatters.get_formatter_by_name(
+            formatter_name, style=style
+        )
 
         highlighted = "{}{}".format(
-            pygments.highlight(obj.literal.encode('utf-8'), lexer, formatter).rstrip(),
+            pygments.highlight(
+                obj.literal.encode('utf-8'),
+                lexer,
+                formatter
+            ).rstrip(),
             EscapeSequence.full_reset_string() + endl,
-            )
+        )
         eseq = EscapeSequence(bg="#202020")
-
-        return self.styler.stylize( eseq, highlighted )
+        return self.styler.stylize(eseq, highlighted)
 
     def block_quote(self, obj, entering):
         # has text children
@@ -214,15 +215,14 @@ class Renderer(object):
         if entering:
             self.footnotes.append(obj.destination)
             return ''
-        else:
-            return "[{}]".format( len(self.footnotes) )
+
+        return "[{}]".format(len(self.footnotes))
 
     def image(self, obj, entering):
         if entering:
             self.footnotes.append(obj.destination)
             return '<image:'
-        else:
-            return ">[{}]".format( len(self.footnotes) )
+        return ">[{}]".format(len(self.footnotes))
 
     def html_inline(self, obj, entering):
         if obj.literal.lower() in ['<br>', '<br/>']:
@@ -235,5 +235,5 @@ class Renderer(object):
         return ''
 
         renderer = Renderer(self.parser, self.style_name)
-        renderer.render( obj.literal[4:-3] )
+        renderer.render(obj.literal[4:-3])
         return ''

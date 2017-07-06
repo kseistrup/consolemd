@@ -13,16 +13,17 @@ logger = logging.getLogger('consolemd.styler')
 
 # based on solarized dark
 solarized = {
-    'text':         '',
-    'heading':      '#cb4b16 bold', # orange
-    'emph':         'italic',
-    'strong':       'bold',
-    'block_quote':  'italic',
-    'code':         '#af8700', # yellow
-    'link':         '#0087ff',
-    'image':        '#0087ff',
-    'bullet':       '#268bd2 bold', # blue
-    }
+    'text': '',
+    'heading': '#cb4b16 bold',  # orange
+    'emph': 'italic',
+    'strong': 'bold',
+    'block_quote': 'italic',
+    'code': '#af8700',  # yellow
+    'link': '#0087ff',
+    'image': '#0087ff',
+    'bullet': '#268bd2 bold',  # blue
+}
+
 
 class Style(object):
 
@@ -31,21 +32,20 @@ class Style(object):
     def __init__(self, style_name):
         self.pyg_style = Style.get_style_by_name(style_name)
 
-        f = self.eseq_from_pygments # shortcut
+        f = self.eseq_from_pygments  # shortcut
 
-        # each style has an entering value and an exiting value, None means reset
+        # each style has an entering value and an exiting value,
+        # None means reset
         self.styles = {
-            'heading':      (f(token.Generic.Heading , solarized['heading'])     , None) ,
-            'emph':         (f(token.Generic.Emph    , solarized['emph'])        , None) ,
-            'strong':       (f(token.Generic.Strong  , solarized['strong'])      , None) ,
-            'link':         (f(token.Name.Entity     , solarized['link'])        , None) ,
-            'image':        (f(token.Name.Entity     , solarized['image'])       , None) ,
-            'code':         (f(token.String.Backtick , solarized['code'])        , None) ,
-            'block_quote':  (f(token.Generic.Emph    , solarized['block_quote']) , None) ,
-            'bullet':       (f(token.Literal         , solarized['bullet'])      , None) ,
-                }
-
-        #print self.styles
+            'heading': (f(token.Generic.Heading, solarized['heading']), None),
+            'emph': (f(token.Generic.Emph, solarized['emph']), None),
+            'strong': (f(token.Generic.Strong, solarized['strong']), None),
+            'link': (f(token.Name.Entity, solarized['link']), None),
+            'image': (f(token.Name.Entity, solarized['image']), None),
+            'code': (f(token.String.Backtick, solarized['code']), None),
+            'block_quote': (f(token.Generic.Emph, solarized['block_quote']), None),
+            'bullet': (f(token.Literal, solarized['bullet']), None),
+        }
 
     @staticmethod
     def get_style_by_name(style_name):
@@ -73,27 +73,27 @@ class Style(object):
                 return ''
 
         return EscapeSequence(
-                fg        = fg(values),
-                bg        = bg(values),
-                bold      = 'bold' in values,
-                underline = 'underline' in values,
-                italic    = 'italic' in values,
-                )
+            fg=fg(values),
+            bg=bg(values),
+            bold='bold' in values,
+            underline='underline' in values,
+            italic='italic' in values,
+        )
 
     def entering(self, key):
-        return self.styles.get(key, (None,None))[0] or Style.plain
+        return self.styles.get(key, (None, None))[0] or Style.plain
 
     def exiting(self, key):
-        return self.styles.get(key, (None,None))[1] or self.entering(key)
+        return self.styles.get(key, (None, None))[1] or self.entering(key)
 
 
 class Styler(object):
 
     no_closing_node = [
-            'text', 'code', 'code_block',
-            'thematic_break', 'softbreak', 'linebreak',
-            'html_inline', 'html_block',
-            ]
+        'text', 'code', 'code_block',
+        'thematic_break', 'softbreak', 'linebreak',
+        'html_inline', 'html_block',
+    ]
 
     def __init__(self, stream, style_name):
 
@@ -109,29 +109,29 @@ class Styler(object):
         return ourselves as a context manager, unfortunately __enter__
         can't take any parameters
         """
-        assert self._curr_call == None, "Styler is not re-entrant"
+        assert self._curr_call is None, "Styler is not re-entrant"
         self._curr_call = (obj, entering)
         return self
 
     def __enter__(self):
-        obj, entering = self._curr_call
+        (obj, entering) = self._curr_call
 
         if entering:
-            eseq = self.dispatch( obj, entering )
-            self.push( eseq )
-            self.stream.write( eseq.color_string() )
+            eseq = self.dispatch(obj, entering)
+            self.push(eseq)
+            self.stream.write(eseq.color_string())
 
     def __exit__(self, exc_type, exc_value, traceback):
-        obj, entering = self._curr_call
+        (obj, entering) = self._curr_call
         self._curr_call = None
 
         if not entering or obj.t in Styler.no_closing_node:
             eseq = self._stack.pop()
-            self.stream.write( eseq.reset_string() )
+            self.stream.write(eseq.reset_string())
 
             if obj.t != 'document':
                 eseq = self._stack[-1]
-                self.stream.write( eseq.color_string() )
+                self.stream.write(eseq.color_string())
             else:
                 assert len(self._stack) == 0, "missed an ast type in no_closing_node"
 
@@ -140,7 +140,7 @@ class Styler(object):
         return partial(self._default, name)
 
     @staticmethod
-    def stylize( eseq, text ):
+    def stylize(eseq, text):
         return "{}{}{}".format(eseq.color_string(), text, eseq.reset_string())
 
     def _default(self, name, obj, entering):
@@ -150,8 +150,7 @@ class Styler(object):
         """
         if entering:
             return self.style.entering(name)
-        else:
-            return self.style.exiting(name)
+        return self.style.exiting(name)
 
     def push(self, eseq):
         self._stack.append(eseq)
@@ -169,9 +168,10 @@ class Styler(object):
 
     def heading(self, obj, entering):
         """
-        do specialized styling for headers, make each heading level a bit darker
+        do specialized styling for headers, make each heading level
+        a bit darker
         """
-        eseq = copy.deepcopy( self.style.entering('heading') )
+        eseq = copy.deepcopy(self.style.entering('heading'))
         color = eseq.fg
 
         level = 1 if obj.level is None else obj.level
